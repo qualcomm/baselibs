@@ -420,6 +420,7 @@ cc_library(
             "@boost.interprocess",
         ],
         "@platforms//os:qnx": [],
+        "//conditions:default": [],
     }),
 )
 

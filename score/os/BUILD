@@ -32,14 +32,11 @@ cc_library(
     deps = [
         ":errno",
         ":object_seam",
-    ] + select(
-        {
-            "@platforms//os:linux": [
-                "//third_party/acl",
-            ],
+    ] + select({
+        "@platforms//os:android": ["//third_party/acl"],
+        "@platforms//os:linux": ["//third_party/acl"],
             "//conditions:default": [],
-        },
-    ),
+    }),
 )
 
 cc_library(
@@ -641,7 +638,12 @@ cc_library(
         ":rt",
         ":static_destruction_guard",
         "@score_baselibs//score/bitmanipulation:bitmask_operators",
-    ],
+    ] + select({
+        # Android bionic does not provide shm_open/shm_unlink.
+        # Use our file-based implementation backed by /dev/shm (tmpfs).
+        "@platforms//os:android": ["//third_party/shm_android"],
+        "//conditions:default": [],
+    }),
 )
 
 cc_library(
@@ -711,7 +713,12 @@ cc_library(
         "pthread.h",
     ],
     features = COMPILER_WARNING_FEATURES,
-    linkopts = ["-lpthread"],
+    # On Android bionic, pthread is part of libc — no separate libpthread.so.
+    # On Linux (glibc), -lpthread is needed.
+    linkopts = select({
+        "@platforms//os:android": [],
+        "//conditions:default": ["-lpthread"],
+    }),
     target_compatible_with = select({
         "@platforms//os:qnx": ["@platforms//:incompatible"],
         "//conditions:default": [],

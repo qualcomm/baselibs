@@ -15,7 +15,7 @@
 
 #include "score/memory/shared/polymorphic_offset_ptr_allocator.h"
 
-#if defined(__linux__)
+#if defined(__linux__) && !defined(__ANDROID__)
 #include <boost/container/scoped_allocator.hpp>
 #include <boost/interprocess/containers/map.hpp>
 #endif  // __linux__
@@ -36,7 +36,7 @@ namespace score::memory::shared
 // file. This keeps both implementations close (i.e. within the same functions) which makes the code easier to read and
 // maintain. It also prevents compiler errors in linux code when compiling for QNX and vice versa.
 // coverity[autosar_cpp14_a16_0_1_violation]
-#if defined(__linux__)
+#if defined(__linux__) && !defined(__ANDROID__)
 template <typename K, typename V, typename Comp = std::less<K>>
 using Map =
     boost::interprocess::map<K,
