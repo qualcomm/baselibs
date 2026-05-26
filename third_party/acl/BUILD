@@ -10,12 +10,31 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 # *******************************************************************************
+load("@bazel_skylib//lib:selects.bzl", "selects")
+
+cc_library(
+    name = "libacl",
+    linkopts = [
+        "-lacl",
+    ],
+    target_compatible_with = ["@platforms//os:linux", "@platforms//cpu:aarch64"],
+    visibility = ["//visibility:public"],
+)
+
+selects.config_setting_group(
+    name = "linux_aarch64",
+    match_all = [
+        "@platforms//os:linux",
+        "@platforms//cpu:aarch64",
+    ],
+)
 
 alias(
     name = "acl",
     actual = select({
-        "@platforms//cpu:aarch64": "@acl-deb-aarch64//:acl",
+        "@platforms//os:android": "//third_party/acl/android:acl_android",
+        ":linux_aarch64": ":libacl",
         "//conditions:default": "@acl-deb//:acl",
     }),
-    visibility = ["//:__subpackages__"],
+    visibility = ["//visibility:public"],
 )
