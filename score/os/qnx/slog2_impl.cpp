@@ -71,10 +71,11 @@ score::cpp::expected<std::int32_t, score::os::Error> Slog2Impl::slog2f(const slo
 {
     // Suppressed here because POSIX method accepts va_list
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) see comment above
-    va_list args;
+    va_list args;  // parasoft-suppress MISRACPP2023-21_10_1-a "D-015: va_list required to wrap QNX vslog2f() which takes va_list; mirrors upstream KW_SUPPRESS:MISRA.FUNC.VARARG"
     /* KW_SUPPRESS_START:MISRA.USE.EXPANSION:Using library-defined macro to ensure correct operation */
     // Suppressed here because POSIX method accepts va_list
     // NOLINTNEXTLINE(hicpp-no-array-decay, cppcoreguidelines-pro-type-vararg) see comment above
+    // parasoft-suppress-next-line MISRACPP2023-21_10_1-a "D-016: va_start required by C standard for varargs forwarding (matches D-015)"
     va_start(args, format);  // NOLINT(cppcoreguidelines-pro-bounds-array-to-pointer-decay) see comment above
     /* KW_SUPPRESS_END:MISRA.USE.EXPANSION:Using library-defined macro to ensure correct operation */
     // Suppressed here because POSIX method accepts va_list
@@ -83,6 +84,7 @@ score::cpp::expected<std::int32_t, score::os::Error> Slog2Impl::slog2f(const slo
     /* KW_SUPPRESS_START:MISRA.USE.EXPANSION:Using library-defined macro to ensure correct operation */
     // Suppressed here because POSIX method accepts va_list
     // NOLINTNEXTLINE(hicpp-no-array-decay, cppcoreguidelines-pro-type-vararg) see comment above
+    // parasoft-suppress-next-line MISRACPP2023-21_10_1-a "D-017: va_end required by C standard for varargs forwarding (matches D-015)"
     va_end(args);  // NOLINT(cppcoreguidelines-pro-bounds-array-to-pointer-decay) see comment above
     /* KW_SUPPRESS_END:MISRA.USE.EXPANSION:Using library-defined macro to ensure correct operation */
     if (result == -1)

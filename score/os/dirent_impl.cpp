@@ -61,7 +61,7 @@ score::cpp::expected<std::int32_t, score::os::Error> DirentImpl::scandir(
     std::int32_t (*const filter)(const struct dirent*),
     std::int32_t (*const compar)(const struct dirent**, const struct dirent**)) const noexcept
 {
-    const std::int32_t number_of_entries = ::scandir(dirp, namelist, filter, compar);
+    const std::int32_t number_of_entries = ::scandir(dirp, namelist, filter, compar);  // parasoft-suppress MISRACPP2023-18_4_1-c "D-010: POSIX scandir() prototype does not permit noexcept callbacks; mirrors upstream coverity[autosar_cpp14_a5_0_3_violation]"
     if (number_of_entries == -1)
     {
         return score::cpp::make_unexpected(score::os::Error::createFromErrno());

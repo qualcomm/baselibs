@@ -74,9 +74,9 @@ void ForEachActiveSlot(const std::vector<std::unique_ptr<Recorder>>& recorders,
 }
 
 template <typename T>
-void LogForEachActiveSlot(const std::vector<std::unique_ptr<Recorder>>& recorders,
-                          const SlotHandle& composite_slot,
-                          const T& arg)
+void LogForEachActiveSlot(const std::vector<std::unique_ptr<Recorder>>& recorders,  // parasoft-suppress MISRACPP2023-0_2_2-a "D-005: false positive - recorders is consumed by lambda captured into ForEachActiveSlot below"
+                          const SlotHandle& composite_slot,  // parasoft-suppress MISRACPP2023-0_2_2-a "D-006: false positive - composite_slot is consumed inside captured lambda"
+                          const T& arg)  // parasoft-suppress MISRACPP2023-0_2_2-a "D-007: false positive - arg is consumed inside captured lambda"
 {
     // LCOV_EXCL_START : no branches to test
     ForEachActiveSlot(recorders, composite_slot, [arg](Recorder& recorder, const SlotHandle& slot) noexcept {
