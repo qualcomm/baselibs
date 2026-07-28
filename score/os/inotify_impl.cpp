@@ -27,25 +27,25 @@ std::uint32_t EventMaskToInteger(const Inotify::EventMask event_mask) noexcept
 {
     std::uint32_t native_event_masks{};
     using utype_eventmask = std::underlying_type<Inotify::EventMask>::type;
-    if (static_cast<utype_eventmask>(event_mask & Inotify::EventMask::kAccess) != 0U)
+    if (static_cast<utype_eventmask>(event_mask & Inotify::EventMask::kAccess) != 0U)  // parasoft-suppress MISRACPP2023-7_0_1-a "D-011: false positive - static_cast targets the enum underlying integer type, not bool; the != 0U produces the boolean"
     {
         /* KW_SUPPRESS_START:MISRA.USE.EXPANSION: Using library-defined macro to ensure correct operation */
         native_event_masks |= static_cast<std::uint32_t>(IN_ACCESS);
         /* KW_SUPPRESS_END:MISRA.USE.EXPANSION: Using library-defined macro to ensure correct operation */
     }
-    if (static_cast<utype_eventmask>(event_mask & Inotify::EventMask::kInMovedTo) != 0U)
+    if (static_cast<utype_eventmask>(event_mask & Inotify::EventMask::kInMovedTo) != 0U)  // parasoft-suppress MISRACPP2023-7_0_1-a "D-012: false positive - same rationale as D-011"
     {
         /* KW_SUPPRESS_START:MISRA.USE.EXPANSION: Using library-defined macro to ensure correct operation */
         native_event_masks |= static_cast<std::uint32_t>(IN_MOVED_TO);
         /* KW_SUPPRESS_END:MISRA.USE.EXPANSION: Using library-defined macro to ensure correct operation */
     }
-    if (static_cast<utype_eventmask>(event_mask & Inotify::EventMask::kInCreate) != 0U)
+    if (static_cast<utype_eventmask>(event_mask & Inotify::EventMask::kInCreate) != 0U)  // parasoft-suppress MISRACPP2023-7_0_1-a "D-013: false positive - same rationale as D-011"
     {
         /* KW_SUPPRESS_START:MISRA.USE.EXPANSION: Using library-defined macro to ensure correct operation */
         native_event_masks |= static_cast<std::uint32_t>(IN_CREATE);
         /* KW_SUPPRESS_END:MISRA.USE.EXPANSION: Using library-defined macro to ensure correct operation */
     }
-    if (static_cast<utype_eventmask>(event_mask & Inotify::EventMask::kInDelete) != 0U)
+    if (static_cast<utype_eventmask>(event_mask & Inotify::EventMask::kInDelete) != 0U)  // parasoft-suppress MISRACPP2023-7_0_1-a "D-014: false positive - same rationale as D-011"
     {
         /* KW_SUPPRESS_START:MISRA.USE.EXPANSION: Using library-defined macro to ensure correct operation */
         native_event_masks |= static_cast<std::uint32_t>(IN_DELETE);

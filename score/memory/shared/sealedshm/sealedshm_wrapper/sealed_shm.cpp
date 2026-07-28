@@ -51,7 +51,7 @@ auto SealedShm::OpenAnonymous(const mode_t mode) noexcept -> score::cpp::expecte
     // coverity[autosar_cpp14_m5_0_21_violation]
     // coverity[autosar_cpp14_a5_2_2_violation]
     // coverity[autosar_cpp14_m5_2_9_violation]
-    return mman_->shm_open(SHM_ANON, O_RDWR | O_CREAT | O_ANON, mode);
+    return mman_->shm_open(SHM_ANON, O_RDWR | O_CREAT | O_ANON, mode);  // parasoft-suppress MISRACPP2023-7_0_4-a "D-003: POSIX/QNX flags (O_RDWR/O_CREAT/O_ANON) are signed int by OS API; mirrors upstream coverity[autosar_cpp14_m5_0_21_violation]"
 // coverity[autosar_cpp14_a16_0_1_violation] Need to limit this functionality to QNX only
 #else
     std::ignore = mode;
@@ -68,7 +68,7 @@ auto SealedShm::Seal(int fd, std::uint64_t size) noexcept -> score::cpp::expecte
     // underlying type.".
     // No harm to do bitwise operations on these values. The values are defined by the QNX API.
     // coverity[autosar_cpp14_m5_0_21_violation]
-    const auto result = mman_->shm_ctl(fd, SHMCTL_ANON | SHMCTL_SEAL, 0UL, size);
+    const auto result = mman_->shm_ctl(fd, SHMCTL_ANON | SHMCTL_SEAL, 0UL, size);  // parasoft-suppress MISRACPP2023-7_0_4-a "D-004: QNX shm_ctl flags signed int by OS API; mirrors upstream coverity[autosar_cpp14_m5_0_21_violation]"
     if (result.has_value())
     {
         return {};

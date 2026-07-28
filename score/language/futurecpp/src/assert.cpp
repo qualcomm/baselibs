@@ -29,13 +29,13 @@ void null_handler(const handler_parameters& /*unused*/) noexcept {} // LCOV_EXCL
 
 std::atomic<handler>& get_assertion_handler_singleton() noexcept
 {
-    static std::atomic<handler> handler{&null_handler};
+    static std::atomic<handler> handler{&null_handler};  // parasoft-suppress MISRACPP2023-6_7_1-a "D-001: Meyers singleton for atomic handler - thread-safe, lazy-init project idiom (see score/utils/meyer_singleton)"
     return handler;
 }
 
 std::atomic<void*>& get_user_data_singleton() noexcept
 {
-    static std::atomic<void*> user_data{nullptr};
+    static std::atomic<void*> user_data{nullptr};  // parasoft-suppress MISRACPP2023-6_7_1-a "D-002: Meyers singleton for atomic user_data - same rationale as D-001"
     return user_data;
 }
 

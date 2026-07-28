@@ -85,8 +85,8 @@ std::size_t TextFormat::PutLogRawBufferData(const LogRawBuffer& data, score::cpp
             {
                 std::array<char, 3> temporary_formatting_buffer{};
                 // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) safe to use std::snprintf
-                std::ignore = std::snprintf(
-                    temporary_formatting_buffer.begin(), temporary_formatting_buffer.size(), "%02hhx", input);
+                std::ignore = std::snprintf(  // parasoft-suppress MISRACPP2023-30_0_1-b "D-008: bounded write to std::array<char,3> with well-defined %02hhx format; mirrors NOLINTNEXTLINE on line above"
+                    temporary_formatting_buffer.begin(), temporary_formatting_buffer.size(), "%02hhx", input);  // parasoft-suppress MISRACPP2023-7_0_3-a "D-009: char->int promotion required by varargs ABI; %02hhx specifier matches"
                 //  Take first two characters from temporary formatting buffer:
                 destination_iterator = std::copy_n(temporary_formatting_buffer.begin(), 2, destination_iterator);
             }

@@ -28,7 +28,7 @@ enum class SignalValue : std::int32_t
 {
     SigBlock = SIG_BLOCK,
     SigSetMask = SIG_SETMASK,
-    SigTerm = SIGTERM,
+    SigTerm = SIGTERM,  // parasoft-suppress MISRACPP2023-21_10_3-a "D-018: SIGTERM required for graceful-shutdown signalling; macro confined to one scoped-enum value to centralise <signal.h> usage"
 };
 
 std::underlying_type_t<SignalValue> SignalValueToPosixType(const SignalValue signal_value)

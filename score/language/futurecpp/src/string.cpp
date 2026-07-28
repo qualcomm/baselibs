@@ -20,7 +20,7 @@
 
 #include <array>
 #include <cstdint>
-#include <cstdio>
+#include <cstdio>  // parasoft-suppress MISRACPP2023-30_0_1-a "D-031: <cstdio> required by score::cpp::pmr::to_string fallback path in this TU"
 #include <cstdlib>
 #include <iterator>
 #include <limits>
