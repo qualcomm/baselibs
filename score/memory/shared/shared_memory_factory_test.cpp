@@ -13,6 +13,10 @@
 #include "score/memory/shared/shared_memory_factory.h"
 #include "score/memory/shared/shared_memory_test_resources.h"
 
+#include "score/mw/log/logging.h"
+#include "score/mw/log/recorder_mock.h"
+#include "score/mw/log/slot_handle.h"
+
 #include <gtest/gtest.h>
 #include <memory>
 #include <thread>
@@ -175,14 +179,24 @@ TEST_F(SharedMemoryFactoryTest, CallingRemoveOnTypedNamedResourceWillNotCrashWhe
 
 TEST_F(SharedMemoryFactoryTest, WhenRemoveIsCalledOnInvalidPathThenItWillNotCrash)
 {
-    testing::internal::CaptureStdout();
+    // On QNX, mw::log routes to slog2 not stdout — use RecorderMock to intercept log calls.
+    ::testing::NiceMock<score::mw::log::RecorderMock> recorder_mock{};
+    const score::mw::log::SlotHandle handle{0U};
+    ON_CALL(recorder_mock, IsLogEnabled(::testing::_, ::testing::_)).WillByDefault(::testing::Return(true));
+    ON_CALL(recorder_mock, StartRecord(::testing::_, ::testing::_))
+        .WillByDefault(::testing::Return(score::cpp::optional<score::mw::log::SlotHandle>{handle}));
+    EXPECT_CALL(recorder_mock, LogStringView(::testing::_, ::testing::_)).Times(::testing::AnyNumber());
+    EXPECT_CALL(recorder_mock,
+                LogStringView(::testing::_, ::testing::HasSubstr("Unexpected error while trying to remove")))
+        .Times(::testing::AtLeast(1));
+    score::mw::log::SetLogRecorder(&recorder_mock);
+
     constexpr const char* const sharedMemoryInvalidPath = "/InvalidPath";
     // When Remove() is called on invalid path
     SharedMemoryFactory::Remove(sharedMemoryInvalidPath);
 
-    // Then it will not crash
-    std::string output = testing::internal::GetCapturedStdout();
-    EXPECT_THAT(output, ::testing::HasSubstr("Unexpected error while trying to remove"));
+    score::mw::log::SetLogRecorder(nullptr);
+    // Then it will not crash (verified by reaching this point without abort)
 }
 
 TEST_P(SharedMemoryFactoryTest, DroppingAfterCreationWillRecreate)
@@ -882,8 +896,12 @@ TEST(SharedMemoryFactoryRemoveStaleArtefactsTest, CallingRemoveStaleArtefactsWil
     SharedMemoryFactory::RemoveStaleArtefacts(dummy_input_path);
 }
 
-// typed memory daemon is only running on the QNX, so these tests will only pass on the QNX
-#if defined(__QNXNTO__)
+// typed memory daemon is only running on the QNX with USE_TYPEDSHMD enabled,
+// so these tests will only pass on the QNX when USE_TYPEDSHMD is defined.
+// When USE_TYPEDSHMD is not defined, AcquireTypedMemoryDaemonUid() returns nullopt
+// unconditionally without calling stat(kTSHMDeviceName) or getpwnam_r, so the
+// mocked calls are never made and the EXPECT_CALLs fail.
+#if defined(__QNXNTO__) && defined(USE_TYPEDSHMD)
 TEST(SharedMemoryFactoryRemoveStaleArtefactsTest,
      CallingRemoveStaleArtefactsWillUnlinkAnOldSharedMemoryRegionWhenAcquireTmdUidFailed)
 {

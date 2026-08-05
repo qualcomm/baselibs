@@ -664,7 +664,11 @@ TEST_F(SpawnTest, Spawn_succcess)
     RecordProperty("DerivationTechnique", "Generation and analysis of equivalence classes");
 
     pid_t pid{0};
+#if defined(__QNX__)
+    char path[] = "/ifs/bin/ls";
+#else
     char path[] = "/bin/ls";
+#endif
     posix_spawn_file_actions_t file_actions;
     char* argv[] = {path, nullptr};
     char* envp[] = {nullptr};
@@ -708,7 +712,11 @@ TEST_F(SpawnTest, Spawnp_success)
     RecordProperty("DerivationTechnique", "Generation and analysis of equivalence classes");
 
     pid_t pid{0};
+#if defined(__QNX__)
+    char path[] = "/ifs/bin/ls";
+#else
     char path[] = "/bin/ls";
+#endif
     posix_spawn_file_actions_t file_actions;
     char* argv[] = {path, nullptr};
     char* envp[] = {nullptr};
@@ -1489,7 +1497,11 @@ TEST_F(SpawnTest, spawn_success)
     std::int32_t fd_count{0};
     const std::int32_t* fd_map{nullptr};
     const struct inheritance* inherit{nullptr};
+#if defined(__QNX__)
+    char path[] = "/ifs/bin/ls";
+#else
     char path[] = "/bin/ls";
+#endif
     char* argv[] = {path, nullptr};
     char* envp[] = {nullptr};
 
@@ -1531,7 +1543,11 @@ TEST_F(SpawnTest, spawnp_success)
     std::int32_t fd_count{0};
     const std::int32_t* fd_map{nullptr};
     const struct inheritance* inherit{nullptr};
+#if defined(__QNX__)
+    char path[] = "/ifs/bin/ls";
+#else
     char path[] = "/bin/ls";
+#endif
     char* argv[] = {path, nullptr};
     char* envp[] = {nullptr};
 

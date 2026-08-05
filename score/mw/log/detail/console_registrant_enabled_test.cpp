@@ -22,8 +22,18 @@ namespace log
 {
 namespace detail
 {
+
+// Force-link console_registrant.cpp into this binary. On QNX with Bazel,
+// alwayslink may not apply to combined test ELFs, causing the translation unit
+// to be dropped. This reference forces the linker to include it, triggering
+// the BackendRegistrant static initialization.
+void ForceConsoleBackendRegistrantLink() noexcept;
+
 namespace
 {
+
+[[maybe_unused]] const bool kConsoleRegistrantLinked =
+    (ForceConsoleBackendRegistrantLink(), true);
 
 TEST(ConsoleRegistrantTest, ConsoleBackendIsRegisteredAfterStaticInitialization)
 {

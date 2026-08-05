@@ -255,6 +255,16 @@ TEST_F(InotifyInstanceImplTest, ClosesInotifyInstanceWhenCloseIsCalled)
 
 TEST_F(InotifyInstanceImplTest, CreatesWatchWhenCallingAddWatch)
 {
+#if defined(__QNX__)
+    // inotify_add_watch_() uses SCORE_LANGUAGE_FUTURECPP_ASSERT_PRD which calls abort() if the
+    // real inotify_add_watch fails. /persistent is not mounted on this target so the test
+    // directory cannot be created and the syscall would fail. Skip to avoid a core dump.
+    if (::access(test_directory.c_str(), F_OK) != 0)
+    {
+        GTEST_SKIP() << "Test directory " << test_directory
+                     << " not available; /persistent not mounted on this target";
+    }
+#endif
     score::cpp::expected<std::int32_t, Error> watch_descriptor;
     EXPECT_CALL(*inotify_mock_,
                 inotify_add_watch(testing::_, ::testing::StrEq(test_directory), Inotify::EventMask::kInCreate))
@@ -303,6 +313,16 @@ TEST_F(InotifyInstanceImplTest, ReturnsErrorWhenCallingAddWatchFails)
 
 TEST_F(InotifyInstanceImplTest, RemovesWatchWhenCallingRemoveWatch)
 {
+#if defined(__QNX__)
+    // Same as CreatesWatchWhenCallingAddWatch: inotify_add_watch_() uses
+    // SCORE_LANGUAGE_FUTURECPP_ASSERT_PRD which aborts if the real inotify_add_watch
+    // fails. Skip when /persistent is not mounted on this target.
+    if (::access(test_directory.c_str(), F_OK) != 0)
+    {
+        GTEST_SKIP() << "Test directory " << test_directory
+                     << " not available; /persistent not mounted on this target";
+    }
+#endif
     score::cpp::expected<std::int32_t, Error> expected_underlying_watch_descriptor;
     EXPECT_CALL(*inotify_mock_,
                 inotify_add_watch(testing::_, ::testing::StrEq(test_directory), Inotify::EventMask::kInCreate))
@@ -344,6 +364,13 @@ TEST_F(InotifyInstanceImplTest, ChecksStateWhenCallingRemoveWatch)
 
 TEST_F(InotifyInstanceImplTest, ReturnsErrorWhenCallingRemoveWatchAndFails)
 {
+#if defined(__QNX__)
+    if (::access(test_directory.c_str(), F_OK) != 0)
+    {
+        GTEST_SKIP() << "Test directory " << test_directory
+                     << " not available; /persistent not mounted on this target";
+    }
+#endif
     const auto error = Error::createFromErrno(EINVAL);
     EXPECT_CALL(*inotify_mock_, inotify_rm_watch(testing::_, ::testing::_))
         .WillOnce(::testing::Return(score::cpp::make_unexpected(error)));
@@ -430,7 +457,15 @@ TEST_F(InotifyInstanceImplTest, EventNameContainsOnlyFileName)
 {
 #if defined(__QNX__) && __QNX__ >= 800 && defined(__x86_64__)
     GTEST_SKIP() << "Ticket-253098 Inotify not supported on QNX 8 x86_64 filesystem";
-#else
+#elif defined(__QNX__)
+    // Inotify requires a non-tmpfs filesystem. On targets where /persistent is not
+    // mounted the test directory is unavailable and inotify_add_watch will fail.
+    if (::access(test_directory.c_str(), F_OK) != 0)
+    {
+        GTEST_SKIP() << "Test directory " << test_directory
+                     << " not available; /persistent not mounted on this target";
+    }
+#endif
     InotifyInstanceImpl inotify_instance{};
     ASSERT_TRUE(inotify_instance.IsValid().has_value());
 
@@ -446,14 +481,19 @@ TEST_F(InotifyInstanceImplTest, EventNameContainsOnlyFileName)
     EXPECT_EQ(events.size(), 1U);
     const auto& event = events[0];
     EXPECT_EQ(event.GetName(), std::string_view{test_filename});
-#endif
 }
 
 TEST_F(InotifyInstanceImplTest, ReadReturnsEventWhenWatchTriggersForInCreate)
 {
 #if defined(__QNX__) && __QNX__ >= 800 && defined(__x86_64__)
     GTEST_SKIP() << "Ticket-253098 Inotify not supported on QNX 8 x86_64 filesystem";
-#else
+#elif defined(__QNX__)
+    if (::access(test_directory.c_str(), F_OK) != 0)
+    {
+        GTEST_SKIP() << "Test directory " << test_directory
+                     << " not available; /persistent not mounted on this target";
+    }
+#endif
     InotifyInstanceImpl inotify_instance{};
     ASSERT_TRUE(inotify_instance.IsValid().has_value());
 
@@ -472,14 +512,19 @@ TEST_F(InotifyInstanceImplTest, ReadReturnsEventWhenWatchTriggersForInCreate)
     EXPECT_EQ(event.GetWatchDescriptor(), watch);
     EXPECT_EQ(event.GetMask(), InotifyEvent::ReadMask::kInCreate);
     EXPECT_EQ(event.GetName(), std::string_view{test_filename});
-#endif
 }
 
 TEST_F(InotifyInstanceImplTest, ReadReturnsEventWhenWatchTriggersForInDelete)
 {
 #if defined(__QNX__) && __QNX__ >= 800 && defined(__x86_64__)
     GTEST_SKIP() << "Ticket-253098 Inotify not supported on QNX 8 x86_64 filesystem";
-#else
+#elif defined(__QNX__)
+    if (::access(test_directory.c_str(), F_OK) != 0)
+    {
+        GTEST_SKIP() << "Test directory " << test_directory
+                     << " not available; /persistent not mounted on this target";
+    }
+#endif
     CreateFile();
 
     InotifyInstanceImpl inotify_instance{};
@@ -500,14 +545,19 @@ TEST_F(InotifyInstanceImplTest, ReadReturnsEventWhenWatchTriggersForInDelete)
     EXPECT_EQ(event.GetWatchDescriptor(), watch);
     EXPECT_EQ(event.GetMask(), InotifyEvent::ReadMask::kInDelete);
     EXPECT_EQ(event.GetName(), std::string_view{test_filename});
-#endif
 }
 
 TEST_F(InotifyInstanceImplTest, ReadReturnsEventsWhenWatchTriggersForMultipleEvents)
 {
 #if defined(__QNX__) && __QNX__ >= 800 && defined(__x86_64__)
     GTEST_SKIP() << "Ticket-253098 Inotify not supported on QNX 8 x86_64 filesystem";
-#else
+#elif defined(__QNX__)
+    if (::access(test_directory.c_str(), F_OK) != 0)
+    {
+        GTEST_SKIP() << "Test directory " << test_directory
+                     << " not available; /persistent not mounted on this target";
+    }
+#endif
     InotifyInstanceImpl inotify_instance{};
     ASSERT_TRUE(inotify_instance.IsValid().has_value());
 
@@ -543,7 +593,6 @@ TEST_F(InotifyInstanceImplTest, ReadReturnsEventsWhenWatchTriggersForMultipleEve
     EXPECT_EQ(event2.GetWatchDescriptor(), watch);
     EXPECT_EQ(event2.GetMask(), InotifyEvent::ReadMask::kInMovedTo);
     EXPECT_EQ(event2.GetName(), std::string_view{test_moved_filename});
-#endif
 }
 
 }  // namespace

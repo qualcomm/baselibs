@@ -458,10 +458,16 @@ TEST_F(UnistdFixture, SetuidNotChangesUidIfPassInvalidId)
     ForkAndExpectTrue([this]() noexcept {
 #if defined(__QNX__)
         ::setuid(1);
-#endif
-        uid_t expected_uid{::getuid()};
+        const uid_t expected_uid{::getuid()};
+        // On QNX, root retains capabilities after setuid(1) and can setuid(0) back.
+        // Use UINT_MAX which is always an invalid UID regardless of capabilities.
+        const auto val = unit_->setuid(static_cast<uid_t>(UINT_MAX));
+        return !val.has_value() && (::getuid() == expected_uid);
+#else
+        const uid_t expected_uid{::getuid()};
         const auto val = unit_->setuid(0);
         return !val.has_value() && (::getuid() == expected_uid);
+#endif
     });
 }
 
@@ -476,12 +482,14 @@ TEST_F(UnistdFixture, SetGidNotChangesGidIfPassInvalidId)
     ForkAndExpectTrue([this]() noexcept {
         const gid_t expected_gid{::getgid()};
 #if defined(__QNX__)
-        const auto remove_setgid_capability = PROCMGR_AID_SETGID | PROCMGR_AOP_DENY | PROCMGR_ADN_ROOT;
-        const auto cap_result = procmgr_ability(0, remove_setgid_capability, PROCMGR_AID_EOL);
-        EXPECT_EQ(cap_result, 0);
-#endif
+        // On QNX, root retains setgid capability and procmgr_ability may not be
+        // available to revoke it. Use UINT_MAX which is always an invalid GID.
+        const auto val = unit_->setgid(static_cast<gid_t>(UINT_MAX));
+        return !val.has_value() && (::getgid() == expected_gid);
+#else
         const auto val = unit_->setgid(expected_gid + 1);
         return !val.has_value() && (::getgid() == expected_gid);
+#endif
     });
 }
 
