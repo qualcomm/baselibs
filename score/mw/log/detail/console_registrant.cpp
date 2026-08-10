@@ -43,6 +43,12 @@ Justification:
 const BackendRegistrant kConsoleRegistrant{LogMode::kConsole, &CreateConsoleRecorder};
 
 }  // namespace
+
+// Provides a symbol for the force-link pattern used in tests on platforms
+// where --whole-archive is not honored by the Bazel toolchain (e.g. QNX).
+// NOLINTNEXTLINE(readability-redundant-declaration)
+void ForceConsoleBackendRegistrantLink() noexcept {}
+
 }  // namespace detail
 }  // namespace log
 }  // namespace mw

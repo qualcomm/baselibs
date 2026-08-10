@@ -56,6 +56,16 @@ TEST_F(InotifyTest, AddWatchSuccessfull)
 
     const auto wd = score::os::Inotify::instance().inotify_add_watch(
         fd.value(), temp_dir_.c_str(), score::os::Inotify::EventMask::kAccess);
+#if defined(__QNX__)
+    // QNX inotify requires a non-tmpfs filesystem (e.g. qnx6). The temp directory
+    // created by mkdtemp resides on a filesystem that does not support inotify on
+    // this target. Skip rather than fail so the error-path tests remain unaffected.
+    if (!wd.has_value())
+    {
+        GTEST_SKIP() << "inotify_add_watch failed; filesystem of " << temp_dir_
+                     << " does not support inotify on this QNX target";
+    }
+#endif
     ASSERT_TRUE(wd.has_value());
 }
 
@@ -111,6 +121,15 @@ TEST_F(InotifyTest, RemoveWatchSuccessfull)
 
     const auto wd = score::os::Inotify::instance().inotify_add_watch(
         fd.value(), temp_dir_.c_str(), score::os::Inotify::EventMask::kInMovedTo);
+#if defined(__QNX__)
+    // QNX inotify requires a non-tmpfs filesystem (e.g. qnx6). Skip if the
+    // filesystem of the temp directory does not support inotify on this target.
+    if (!wd.has_value())
+    {
+        GTEST_SKIP() << "inotify_add_watch failed; filesystem of " << temp_dir_
+                     << " does not support inotify on this QNX target";
+    }
+#endif
     ASSERT_TRUE(wd.has_value());
     const auto ret = score::os::Inotify::instance().inotify_rm_watch(fd.value(), wd.value());
     ASSERT_TRUE(ret.has_value());

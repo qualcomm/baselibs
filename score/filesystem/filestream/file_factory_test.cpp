@@ -69,6 +69,34 @@ class FileFactoryTest : public ::testing::Test
         }
     }
 
+    // Returns true if rename() is supported on the test filesystem.
+    // On some QNX targets (e.g. /persistent/tmp), rename() is not supported.
+    bool IsRenameSupported() const
+    {
+        const auto src = test_tmpdir_ / ".rename_check_src";
+        const auto dst = test_tmpdir_ / ".rename_check_dst";
+        const auto fd = ::open(src.CStr(), O_CREAT | O_WRONLY | O_TRUNC, 0600);
+        if (fd < 0) { return false; }
+        ::close(fd);
+        const bool ok = (::rename(src.CStr(), dst.CStr()) == 0);
+        ::unlink(src.CStr());
+        ::unlink(dst.CStr());
+        return ok;
+    }
+
+    // Returns true if mkdir() is supported on the test filesystem.
+    // On some QNX targets (e.g. /persistent/tmp), mkdir() returns ENOSYS.
+    bool IsMkdirSupported() const
+    {
+        const auto check_dir = test_tmpdir_ / ".mkdir_check";
+        if (::mkdir(check_dir.CStr(), 0777) == 0)
+        {
+            ::rmdir(check_dir.CStr());
+            return true;
+        }
+        return (errno != ENOSYS && errno != EROFS);
+    }
+
     FileFactory unit_;
     Path test_tmpdir_;
     bool remove_temp_;
@@ -119,6 +147,11 @@ TEST_F(FileFactoryTest, OpensNonExistingFile)
 
 TEST_F(FileFactoryTest, OpenForAtomicUpdate)
 {
+    if (!IsRenameSupported())
+    {
+        GTEST_SKIP() << "rename() not supported on this filesystem; AtomicUpdate requires rename";
+    }
+
     static constexpr auto kTestFileName = "not_existing_yet";
     Path test_filename = test_tmpdir_ / kTestFileName;
 
@@ -157,6 +190,11 @@ TEST_F(FileFactoryTest, AtomicUpdateInvalidMode)
 
 TEST_F(FileFactoryTest, OldContentVisibleBeforeAtomicObjectGetsDeleted)
 {
+    if (!IsRenameSupported())
+    {
+        GTEST_SKIP() << "rename() not supported on this filesystem; AtomicUpdate requires rename";
+    }
+
     static constexpr auto kTestFileName = "keep_content_before_drop";
     Path test_filename = test_tmpdir_ / kTestFileName;
 
@@ -198,6 +236,11 @@ TEST_F(FileFactoryTest, OldContentVisibleBeforeAtomicObjectGetsDeleted)
 
 TEST_F(FileFactoryTest, ErrorOnFailingAtomicUpdate)
 {
+    if (!IsMkdirSupported())
+    {
+        GTEST_SKIP() << "mkdir() not supported on this filesystem";
+    }
+
     auto fs = FilesystemFactory{}.CreateInstance();
 
     static constexpr auto kFaultyTargetFile{"file_in_disguise"};
@@ -274,7 +317,9 @@ TEST_F(FileFactoryTestWithStatMock, AtomicUpdateFileHandleFailedOnStat)
     static constexpr auto kFaultyTargetFile{"path"};
     Path test_dir = test_tmpdir_ / kFaultyTargetFile;
 
-    auto result = unit_.AtomicUpdate(test_tmpdir_, std::ios_base::out);
+    // Use test_dir (inside test_tmpdir_) so the temp file is created in test_tmpdir_,
+    // not in the parent of test_tmpdir_ which may not be writable on QNX.
+    auto result = unit_.AtomicUpdate(test_dir, std::ios_base::out);
     ASSERT_TRUE(result.has_value());
 }
 
@@ -317,7 +362,9 @@ TEST_F(FileFactoryTestWithStatMock, AtomicUpdateFileHandleFailedOnChown)
     static constexpr auto kFaultyTargetFile{"path"};
     Path test_dir = test_tmpdir_ / kFaultyTargetFile;
 
-    auto result = unit_.AtomicUpdate(test_tmpdir_, std::ios_base::out);
+    // Use test_dir (inside test_tmpdir_) so the temp file is created in test_tmpdir_,
+    // not in the parent of test_tmpdir_ which may not be writable on QNX.
+    auto result = unit_.AtomicUpdate(test_dir, std::ios_base::out);
     ASSERT_FALSE(result.has_value());
     EXPECT_EQ(result.error(), filesystem::ErrorCode::kCouldNotSetPermissions);
 }

@@ -315,8 +315,16 @@ TEST_F(SharedMemoryResourceOpenTest, DifferentChildClassIsNotEqual)
     ASSERT_FALSE(resource->is_equal(otherResource));
 }
 
-// typed memory daemon is only running on the QNX, so these tests will only pass on the QNX
-#if defined(__QNX__)
+// These tests mock AcquireTypedMemoryDaemonUid() internals (stat("/dev/typedshm") and getpwnam_r).
+// AcquireTypedMemoryDaemonUid() only performs those OS calls when both __QNX__ and USE_TYPEDSHMD
+// are defined (see typed_memory_utils.cpp). When USE_TYPEDSHMD is not defined the function returns
+// std::nullopt unconditionally, so the mocked calls never happen. With InSequence active, the
+// mmap EXPECT_CALL has GetCreatorUid as a pre-requisite; if GetCreatorUid is never called, mmap
+// is treated as "unexpected" by GMock, which returns a default error value, causing
+// mapMemoryIntoProcess() to call std::terminate() (exit 134 / SIGABRT).
+// Guard with USE_TYPEDSHMD so these tests are only compiled when the feature is actually enabled
+// (controlled by --@score_baselibs//score/memory/shared/flags:use_typedshmd in .bazelrc).
+#if defined(__QNX__) && defined(USE_TYPEDSHMD)
 TEST_F(SharedMemoryResourceOpenTest, IsShmInTypedMemoryReturnsTrueWhenOpenTypedSharedMemorySuccess)
 {
     InSequence sequence{};

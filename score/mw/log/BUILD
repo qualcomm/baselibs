@@ -61,6 +61,7 @@ cc_library(
         "@score_baselibs//score/mw/log/detail:circular_allocator",
         "@score_baselibs//score/mw/log/detail:empty_recorder",
         "@score_baselibs//score/mw/log/detail:recorder_interface",
+        "@score_baselibs//score/mw/log/detail:registry_aware_recorder_factory",
         "@score_baselibs//score/mw/log/detail:thread_local_guard",
         "@score_baselibs//score/result",
         "@score_baselibs//score/utils/meyer_singleton",
@@ -97,6 +98,7 @@ cc_library(
         ":frontend",
         "@score_baselibs//score/mw/log/detail:backend_console",
     ],
+    alwayslink = True,
 )
 
 # backend registration API for backend registrants
